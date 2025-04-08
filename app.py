@@ -122,8 +122,8 @@ def process_tab(tab_name, sheet_name):
             logger.info(f"Colunas: {df.columns.tolist()}")
             
             if len(df) > 0:
-            logger.info(f"Primeiros valores: {df['y'].head().tolist()}")
-            logger.info(f"Últimos valores: {df['y'].tail().tolist()}")
+                logger.info(f"Primeiros valores: {df['y'].head().tolist()}")
+                logger.info(f"Últimos valores: {df['y'].tail().tolist()}")
             else:
                 logger.warning(f"Nenhum dado encontrado na aba {sheet_name}")
                 st.warning(f"⚠️ Nenhum dado encontrado na aba {sheet_name}")
@@ -146,7 +146,7 @@ def process_tab(tab_name, sheet_name):
             
             # Opção para ver dados em formato tabular
             if st.checkbox(f"Ver tabela de dados para {tab_name}", False):
-            st.dataframe(df)
+                st.dataframe(df)
             
             # Variáveis exógenas (se disponíveis)
             exog_cols = [col for col in df.columns if col not in ['ds', 'y']]
@@ -340,7 +340,7 @@ def process_tab(tab_name, sheet_name):
                         # Gerar previsão
                         with st.spinner("Gerando previsão..."):
                             try:
-                        forecast_df = forecaster.get_forecast(
+                                forecast_df = forecaster.get_forecast(
                                     df=df.copy(),
                                     h=horizon,
                                     freq=freq,
@@ -351,8 +351,8 @@ def process_tab(tab_name, sheet_name):
                                 )
                                 
                                 progress_bar.progress(67)
-                        
-                        if forecast_df is not None:
+                                
+                                if forecast_df is not None:
                                     st.success("✅ Previsão gerada com sucesso!")
                                     
                                     # Exibir resumo da previsão
@@ -380,7 +380,7 @@ def process_tab(tab_name, sheet_name):
                                         # Previsão
                                         fig.add_trace(go.Scatter(
                                             x=forecast_df['ds'], 
-                                            y=forecast_df['y'], 
+                                            y=forecast_df['y_pred'], 
                                             mode='lines', 
                                             name='Previsão',
                                             line=dict(color='red')
@@ -395,15 +395,15 @@ def process_tab(tab_name, sheet_name):
                                     
                                     # Exibir dados detalhados da previsão
                                     if st.checkbox("Ver dados da previsão", False):
-                            st.dataframe(forecast_df)
-                            
-                            # Salvar previsão
+                                        st.dataframe(forecast_df)
+                                    
+                                    # Salvar previsão
                                     if st.checkbox("Salvar previsão no Google Sheets", True):
                                         try:
-                            if sheets_connector.write_forecast(sheet_name, forecast_df):
-                                st.success("✅ Previsão salva com sucesso!")
-                            else:
-                                st.warning("⚠️ Não foi possível salvar a previsão no Google Sheets")
+                                            if sheets_connector.write_forecast(sheet_name, forecast_df):
+                                                st.success("✅ Previsão salva com sucesso!")
+                                            else:
+                                                st.warning("⚠️ Não foi possível salvar a previsão no Google Sheets")
                                         except Exception as e:
                                             st.error(f"❌ Erro ao salvar previsão: {str(e)}")
                                             logger.exception("Erro detalhado:")
@@ -418,8 +418,8 @@ def process_tab(tab_name, sheet_name):
                                     )
                                     
                                     progress_bar.progress(100)
-                        else:
-                            st.error("❌ Erro ao gerar previsão. Verifique os logs para mais detalhes.")
+                                else:
+                                    st.error("❌ Erro ao gerar previsão. Verifique os logs para mais detalhes.")
                             except Exception as e:
                                 st.error(f"❌ Erro ao gerar previsão: {str(e)}")
                                 logger.exception("Erro detalhado:")
