@@ -155,6 +155,14 @@ Se suas previsões apresentarem quase o mesmo valor em todos os períodos:
 - Verifique se seus dados históricos têm variabilidade suficiente
 - Use o botão "Limpar Cache" para garantir novos resultados da API
 
+### Previsões com Valores Muito Baixos
+Se suas previsões estiverem retornando valores muito abaixo do que é aceitável para seu negócio:
+- Use a opção "Fator de valor mínimo" nas configurações avançadas
+- Esta opção garante que os valores previstos não sejam menores que uma porcentagem da média histórica
+- Por exemplo, um fator de 0.5 (50%) para dados com média histórica de 47 reais estabeleceria um piso de 23.5 reais
+- Aumente este valor para garantir previsões mais próximas da média histórica
+- Valores sugeridos: 0.7 (70%) para previsões conservadoras, 0.5 (50%) para previsões mais flexíveis
+
 ### Outros Problemas Comuns
 - **Cache desatualizado**: Use o botão "Limpar Cache" nas opções avançadas
 - **Dados não aparecem**: Verifique o formato das colunas no Google Sheets (necessário 'ds' e 'y')

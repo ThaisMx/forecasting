@@ -62,6 +62,16 @@ if show_advanced:
     include_intervals = st.sidebar.checkbox("Incluir intervalos de previsão", True)
     interval_levels = st.sidebar.multiselect("Níveis de intervalo", [50, 60, 70, 80, 90, 95, 99], default=[80, 90])
     
+    # Controle de valor mínimo
+    min_value_factor = st.sidebar.slider(
+        "Fator de valor mínimo", 
+        min_value=0.1, 
+        max_value=1.0, 
+        value=0.5, 
+        step=0.05,
+        help="Garante que os valores previstos não sejam menores que esta porcentagem da média histórica"
+    )
+    
     # Fine-tuning
     use_fine_tuning = st.sidebar.checkbox("Utilizar fine-tuning", False)
     if use_fine_tuning:
@@ -112,8 +122,8 @@ def process_tab(tab_name, sheet_name):
             logger.info(f"Colunas: {df.columns.tolist()}")
             
             if len(df) > 0:
-                logger.info(f"Primeiros valores: {df['y'].head().tolist()}")
-                logger.info(f"Últimos valores: {df['y'].tail().tolist()}")
+            logger.info(f"Primeiros valores: {df['y'].head().tolist()}")
+            logger.info(f"Últimos valores: {df['y'].tail().tolist()}")
             else:
                 logger.warning(f"Nenhum dado encontrado na aba {sheet_name}")
                 st.warning(f"⚠️ Nenhum dado encontrado na aba {sheet_name}")
@@ -136,7 +146,7 @@ def process_tab(tab_name, sheet_name):
             
             # Opção para ver dados em formato tabular
             if st.checkbox(f"Ver tabela de dados para {tab_name}", False):
-                st.dataframe(df)
+            st.dataframe(df)
             
             # Variáveis exógenas (se disponíveis)
             exog_cols = [col for col in df.columns if col not in ['ds', 'y']]
@@ -330,18 +340,19 @@ def process_tab(tab_name, sheet_name):
                         # Gerar previsão
                         with st.spinner("Gerando previsão..."):
                             try:
-                                forecast_df = forecaster.get_forecast(
+                        forecast_df = forecaster.get_forecast(
                                     df=df.copy(),
                                     h=horizon,
                                     freq=freq,
                                     level=interval_levels if show_advanced and include_intervals else [80, 90],
                                     model=model_id if model_id else model,
-                                    X_df=df[exog_cols] if use_exog and has_exog else None
+                                    X_df=df[exog_cols] if use_exog and has_exog else None,
+                                    min_value_factor=min_value_factor if show_advanced else 0.5
                                 )
                                 
                                 progress_bar.progress(67)
-                                
-                                if forecast_df is not None:
+                        
+                        if forecast_df is not None:
                                     st.success("✅ Previsão gerada com sucesso!")
                                     
                                     # Exibir resumo da previsão
@@ -384,15 +395,15 @@ def process_tab(tab_name, sheet_name):
                                     
                                     # Exibir dados detalhados da previsão
                                     if st.checkbox("Ver dados da previsão", False):
-                                        st.dataframe(forecast_df)
-                                    
-                                    # Salvar previsão
+                            st.dataframe(forecast_df)
+                            
+                            # Salvar previsão
                                     if st.checkbox("Salvar previsão no Google Sheets", True):
                                         try:
-                                            if sheets_connector.write_forecast(sheet_name, forecast_df):
-                                                st.success("✅ Previsão salva com sucesso!")
-                                            else:
-                                                st.warning("⚠️ Não foi possível salvar a previsão no Google Sheets")
+                            if sheets_connector.write_forecast(sheet_name, forecast_df):
+                                st.success("✅ Previsão salva com sucesso!")
+                            else:
+                                st.warning("⚠️ Não foi possível salvar a previsão no Google Sheets")
                                         except Exception as e:
                                             st.error(f"❌ Erro ao salvar previsão: {str(e)}")
                                             logger.exception("Erro detalhado:")
@@ -407,8 +418,8 @@ def process_tab(tab_name, sheet_name):
                                     )
                                     
                                     progress_bar.progress(100)
-                                else:
-                                    st.error("❌ Erro ao gerar previsão. Verifique os logs para mais detalhes.")
+                        else:
+                            st.error("❌ Erro ao gerar previsão. Verifique os logs para mais detalhes.")
                             except Exception as e:
                                 st.error(f"❌ Erro ao gerar previsão: {str(e)}")
                                 logger.exception("Erro detalhado:")

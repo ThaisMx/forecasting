@@ -32,7 +32,7 @@ class TimeGPTForecaster:
             "content-type": "application/json",
             "Authorization": f"Bearer {self.api_key}"
         }
-        
+
         # Modelos disponíveis
         self.available_models = ["timegpt-1", "timegpt-1-long-horizon"]
         
@@ -176,7 +176,7 @@ class TimeGPTForecaster:
                     else:
                         logger.info("Requisição bem-sucedida com endpoint alternativo")
                 else:
-                    raise Exception(f"Erro na API: {response.status_code} - {response.text}")
+                raise Exception(f"Erro na API: {response.status_code} - {response.text}")
             
             # Processar resposta
             result = response.json()
@@ -435,7 +435,7 @@ class TimeGPTForecaster:
         except Exception as e:
             logger.error(f"Erro ao obter previsão: {str(e)}")
             logger.error(f"Traceback: {traceback.format_exc()}")
-            return None
+            return None 
     
     def cross_validation(self, df, h=7, n_windows=5, freq='D', level=[80, 90], model="timegpt-1", X_df=None):
         """
@@ -1087,7 +1087,7 @@ class TimeGPTForecaster:
         logger.error(f"Todas as {max_retries} tentativas falharam")
         return None
 
-    def forecast(self, df, frequency='M', horizon=30, alpha=None, level=[80, 95], cv_threshold=1.0, model=None):
+    def forecast(self, df, frequency='M', horizon=30, alpha=None, level=[80, 95], cv_threshold=1.0, model=None, min_value_factor=0.5):
         """
         Realiza previsão de série temporal usando o modelo TimeGPT.
         
@@ -1098,6 +1098,7 @@ class TimeGPTForecaster:
         :param level: Níveis de confiança para intervalos de previsão
         :param cv_threshold: Limite mínimo do coeficiente de variação (%) para considerar a previsão válida
         :param model: Modelo TimeGPT a ser usado. Se None, escolherá automaticamente com base no horizonte
+        :param min_value_factor: Fator mínimo em relação à média histórica (ex: 0.5 = 50% da média histórica)
         :return: DataFrame com a previsão
         """
         logger.info(f"Iniciando previsão com TimeGPT. Horizonte: {horizon}, Frequência: {frequency}")
@@ -1203,6 +1204,21 @@ class TimeGPTForecaster:
                 # Coeficiente de variação (em porcentagem)
                 cv = 0 if mean_forecast == 0 else (std_forecast / abs(mean_forecast)) * 100
                 logger.info(f"Coeficiente de variação da previsão: {cv:.2f}%")
+                
+                # Calcular valor mínimo baseado na média histórica
+                historical_mean = np.mean(df['y'])
+                min_allowed_value = historical_mean * min_value_factor
+                logger.info(f"Média histórica: {historical_mean:.2f}, Valor mínimo permitido: {min_allowed_value:.2f}")
+                
+                # Verificar se a previsão tem valores muito baixos
+                if mean_forecast < min_allowed_value:
+                    logger.warning(f"Valor médio previsto ({mean_forecast:.2f}) está abaixo do mínimo permitido ({min_allowed_value:.2f})")
+                    logger.warning("Ajustando valores para respeitar o mínimo permitido")
+                    
+                    # Calcular fator de escala para ajustar os valores
+                    scale_factor = min_allowed_value / mean_forecast if mean_forecast > 0 else 1.0
+                    forecast_values = [val * scale_factor for val in forecast_values]
+                    logger.info(f"Valores escalados por um fator de {scale_factor:.2f}")
                 
                 # Se o CV for muito baixo (valores quase idênticos), recriar a previsão
                 # Um CV abaixo do limite geralmente indica valores muito similares
