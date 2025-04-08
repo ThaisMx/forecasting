@@ -8,7 +8,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar arquivos importantes explicitamente primeiro
 COPY credentials.json .
-COPY .env .
+
+# Configurar variáveis de ambiente a partir dos argumentos do build
+ARG TIMEGPT_API_KEY
+ARG GOOGLE_SHEET_ID
+ENV TIMEGPT_API_KEY=${TIMEGPT_API_KEY}
+ENV GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}
 
 # Depois copiar os arquivos Python
 COPY *.py .
